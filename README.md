@@ -368,7 +368,7 @@ require 'diff_matcher'
 # Options: by default, color_enabled is controlled by Rspec, and quiet is set to true.
 RSpec::Matchers.define :be_matching do |expected|
   match do |actual|
-    options = { color_enabled: RSpec::configuration.color_enabled?, quiet: true }.merge(@options || {})
+    options = { :color_enabled => RSpec::configuration.color_enabled?, :quiet => true }.merge(@options || {})
     @difference = DiffMatcher::Difference.new(expected, actual, options)
     @difference.matching?
   end
