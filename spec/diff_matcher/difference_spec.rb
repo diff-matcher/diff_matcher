@@ -470,6 +470,36 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
       end
     end
 
+    context 'a duck-type responding to #matches?' do
+      matchable = Class.new do
+        def initialize(expected)
+          @expected = expected
+        end
+
+        def matches?(actual)
+          actual == @expected
+        end
+
+        def failure_message
+          "the matcher should be eq '#{@expected}'"
+        end
+
+        def description
+          "be eq #{@expected}"
+        end
+      end
+      expected, same, different =
+        matchable.new('foo'),
+        'foo',
+        'bar'
+
+      it_behaves_like "a diff matcher", expected, same, different,
+        <<-EOF
+        - the matcher should be eq 'foo'+ "bar"
+        Where, - 1 missing, + 1 additional
+        EOF
+    end
+
     context "a proc," do
       expected, same, different =
         lambda { |x| [FalseClass, TrueClass].include? x.class },
@@ -654,12 +684,25 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
   end
 
   context "when expected has multiple items," do
-    expected, same, different =
-      [ 1,  2, /\d/, Fixnum, 4..6 , lambda { |x| x % 6 == 0 } ],
-      [ 1,  2, "3" , 4     , 5    , 6                         ],
-      [ 0,  2, "3" , 4     , 5    , 6                         ]
+    matchable = Class.new do
+      def initialize(expected)
+        @expected = expected
+      end
 
-    describe "it shows regex, class, range, proc matches and matches" do
+      def matches?(actual)
+        actual == @expected
+      end
+
+      def description
+        "be == #{@expected}"
+      end
+    end
+    expected, same, different =
+      [ 1,  2, /\d/, Fixnum, 4..6 , lambda { |x| x % 6 == 0 }, matchable.new(7)],
+      [ 1,  2, "3" , 4     , 5    , 6                        , 7               ],
+      [ 0,  2, "3" , 4     , 5    , 6                        , 7               ]
+
+    describe "it shows regex, class, range, proc matches, matches and RSpec matcher" do
       it_behaves_like "a diff matcher", expected, same, different,
         <<-EOF
         [
@@ -668,9 +711,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
           ~ "(3)",
           : 4,
           . 5,
-          { 6
+          { 6,
+          R 7 be == 7
         ]
-        Where, - 1 missing, + 1 additional, ~ 1 match_regexp, : 1 match_class, . 1 match_range, { 1 match_proc
+        Where, - 1 missing, + 1 additional, ~ 1 match_regexp, : 1 match_class, . 1 match_range, { 1 match_proc, R 1 match_rspec
         EOF
     end
 
@@ -693,9 +737,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
           ~ "(3)",
           : 4,
           . 5,
-          { 6
+          { 6,
+          R 7 be == 7
         ]
-        Where, - 1 missing, + 1 additional, ~ 1 match_regexp, : 1 match_class, . 1 match_range, { 1 match_proc
+        Where, - 1 missing, + 1 additional, ~ 1 match_regexp, : 1 match_class, . 1 match_range, { 1 match_proc, R 1 match_rspec
         EOF
     end
 
@@ -708,9 +753,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
         \e[0m  \e[32m~ \e[0m"\e[32m(\e[1m3\e[0m\e[32m)\e[0m"\e[0m,
         \e[0m  \e[34m: \e[1m4\e[0m,
         \e[0m  \e[36m. \e[1m5\e[0m,
-        \e[0m  \e[36m{ \e[1m6\e[0m
+        \e[0m  \e[36m{ \e[1m6\e[0m,
+        \e[0m  \e[36mR \e[1m7 be == 7\e[0m
         \e[0m]
-        Where, \e[31m- \e[1m1 missing\e[0m, \e[33m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m
+        Where, \e[31m- \e[1m1 missing\e[0m, \e[33m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m, \e[36mR \e[1m1 match_rspec\e[0m
         EOF
 
       context "on a white background" do
@@ -722,9 +768,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
           \e[0m  \e[32m~ \e[0m"\e[32m(\e[1m3\e[0m\e[32m)\e[0m"\e[0m,
           \e[0m  \e[34m: \e[1m4\e[0m,
           \e[0m  \e[36m. \e[1m5\e[0m,
-          \e[0m  \e[36m{ \e[1m6\e[0m
+          \e[0m  \e[36m{ \e[1m6\e[0m,
+          \e[0m  \e[36mR \e[1m7 be == 7\e[0m
           \e[0m]
-          Where, \e[31m- \e[1m1 missing\e[0m, \e[35m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m
+          Where, \e[31m- \e[1m1 missing\e[0m, \e[35m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m, \e[36mR \e[1m1 match_rspec\e[0m
           EOF
       end
 
@@ -739,9 +786,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
           \e[0m  \e[32m~ \e[0m"\e[32m(\e[1m3\e[0m\e[32m)\e[0m"\e[0m,
           \e[0m  \e[34m: \e[1m4\e[0m,
           \e[0m  \e[36m. \e[1m5\e[0m,
-          \e[0m  \e[36m{ \e[1m6\e[0m
+          \e[0m  \e[36m{ \e[1m6\e[0m,
+          \e[0m  \e[36mR \e[1m7 be == 7\e[0m
           \e[0m]
-          Where, \e[31m- \e[1m1 missing\e[0m, \e[33m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m
+          Where, \e[31m- \e[1m1 missing\e[0m, \e[33m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m, \e[36mR \e[1m1 match_rspec\e[0m
           EOF
       end
 
@@ -756,9 +804,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
           \e[0m  \e[32m~ \e[0m"\e[32m(\e[1m3\e[0m\e[32m)\e[0m"\e[0m,
           \e[0m  \e[34m: \e[1m4\e[0m,
           \e[0m  \e[36m. \e[1m5\e[0m,
-          \e[0m  \e[36m{ \e[1m6\e[0m
+          \e[0m  \e[36m{ \e[1m6\e[0m,
+          \e[0m  \e[36mR \e[1m7 be == 7\e[0m
           \e[0m]
-          Where, \e[31m- \e[1m1 missing\e[0m, \e[35m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m
+          Where, \e[31m- \e[1m1 missing\e[0m, \e[35m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m, \e[36mR \e[1m1 match_rspec\e[0m
           EOF
       end
     end
@@ -778,9 +827,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
         \e[0m  \e[32m~ \e[0m"\e[32m(\e[1m3\e[0m\e[32m)\e[0m"\e[0m,
         \e[0m  \e[34m: \e[1m4\e[0m,
         \e[0m  \e[36m. \e[1m5\e[0m,
-        \e[0m  \e[36m{ \e[1m6\e[0m
+        \e[0m  \e[36m{ \e[1m6\e[0m,
+        \e[0m  \e[36mR \e[1m7 be == 7\e[0m
         \e[0m]
-        Where, \e[31m- \e[1m1 missing\e[0m, \e[35m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m
+        Where, \e[31m- \e[1m1 missing\e[0m, \e[35m+ \e[1m1 additional\e[0m, \e[32m~ \e[1m1 match_regexp\e[0m, \e[34m: \e[1m1 match_class\e[0m, \e[36m. \e[1m1 match_range\e[0m, \e[36m{ \e[1m1 match_proc\e[0m, \e[36mR \e[1m1 match_rspec\e[0m
         EOF
     end
 
@@ -794,9 +844,10 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
           <span style=\"color:green\">~ </b></span>\"<span style=\"color:green\">(<b>3</b></span><span style=\"color:green\">)</b></span>\"</b></span>,
           <span style=\"color:blue\">: <b>4</b></span>,
           <span style=\"color:cyan\">. <b>5</b></span>,
-          <span style=\"color:cyan\">{ <b>6</b></span>
+          <span style=\"color:cyan\">{ <b>6</b></span>,
+          <span style=\"color:cyan\">R <b>7 be == 7</b></span>
         ]
-        Where, <span style=\"color:red\">- <b>1 missing</b></span>, <span style=\"color:magenta\">+ <b>1 additional</b></span>, <span style=\"color:green\">~ <b>1 match_regexp</b></span>, <span style=\"color:blue\">: <b>1 match_class</b></span>, <span style=\"color:cyan\">. <b>1 match_range</b></span>, <span style=\"color:cyan\">{ <b>1 match_proc</b></span>
+        Where, <span style=\"color:red\">- <b>1 missing</b></span>, <span style=\"color:magenta\">+ <b>1 additional</b></span>, <span style=\"color:green\">~ <b>1 match_regexp</b></span>, <span style=\"color:blue\">: <b>1 match_class</b></span>, <span style=\"color:cyan\">. <b>1 match_range</b></span>, <span style=\"color:cyan\">{ <b>1 match_proc</b></span>, <span style=\"color:cyan\">R <b>1 match_rspec</b></span>
         </pre>
         EOF
     end

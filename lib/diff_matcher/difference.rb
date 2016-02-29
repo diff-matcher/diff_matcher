@@ -88,7 +88,8 @@ module DiffMatcher
         :match_class   => [BLUE  , ":"],
         :match_matcher => [BLUE  , "|"],
         :match_range   => [CYAN  , "."],
-        :match_proc    => [CYAN  , "{"]
+        :match_proc    => [CYAN  , "{"],
+        :match_rspec   => [CYAN  , "R"]
     }
 
     class << self
@@ -186,7 +187,7 @@ module DiffMatcher
       @matches_shown ||= lambda {
         ret = []
         unless @quiet
-          ret += [:match_matcher, :match_class, :match_range, :match_proc, :match_regexp]
+          ret += [:match_matcher, :match_class, :match_range, :match_proc, :match_regexp, :match_rspec]
           ret += [:match_value]
         end
         ret
@@ -273,7 +274,12 @@ module DiffMatcher
         when Range  ; [expected.include?(actual)                      , :match_range  ]
         when Proc   ; [expected.call(actual)                          , :match_proc   ]
         when Regexp ; [actual.is_a?(String) && actual.match(expected) , :match_regexp ]
-        else          [actual == expected                             , :match_value  ]
+        else
+          if expected.respond_to?(:matches?)
+            [expected.matches?(actual), :match_rspec]
+          else
+            [actual == expected, :match_value]
+          end
       end
     end
 
@@ -294,6 +300,7 @@ module DiffMatcher
 
     def match_to_s(expected, actual, match_type)
       actual = match_regexp_to_s(expected, actual) if match_type == :match_regexp
+      actual = "#{actual} #{expected.description}" if match_type == :match_rspec
       markup(match_type, actual) if matches_shown.include?(match_type)
     end
 
@@ -308,6 +315,16 @@ module DiffMatcher
       end
     end
 
+    def summarize_rspec_matcher(matcher)
+      if matcher.respond_to?(:failure_message)
+        matcher.failure_message
+      elsif matcher.respond_to?(:failure_message_for_should)
+        matcher.failure_message_for_should
+      else
+        summarize_item(matcher)
+      end
+    end
+
     def difference_to_s(expected, actual)
       match, match_type, d = match?(expected, actual)
       if match
@@ -316,6 +333,8 @@ module DiffMatcher
         case match_type
         when :match_matcher
           d
+        when :match_rspec
+          "#{markup(:missing, summarize_rspec_matcher(expected))}#{markup(:additional, summarize_item(actual))}"
         else
           exp, act = if [expected, actual].any? { |item| item.is_a?(Proc) }
             [expected, actual].map { |item| item.inspect }
