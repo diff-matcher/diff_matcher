@@ -53,7 +53,7 @@ module DiffMatcher
       opts = expected_opts(e)
       size = opts[:size]
       case size
-      when Fixnum
+      when Integer
         min = size
         max = size
       when Range

@@ -29,7 +29,7 @@ composed.
 eg.
 
 ``` ruby
-expected = { :a=>{ :a1=>11          }, :b=>[ 21, 22 ], :c=>/\d/, :d=>Fixnum, :e=>lambda { |x| (4..6).include? x } },
+expected = { :a=>{ :a1=>11          }, :b=>[ 21, 22 ], :c=>/\d/, :d=>Integer, :e=>lambda { |x| (4..6).include? x } },
 actual   = { :a=>{ :a1=>10, :a2=>12 }, :b=>[ 21     ], :c=>'3' , :d=>4     , :e=>5                                },
 puts DiffMatcher::difference(expected, actual, :color_scheme=>:white_background)
 ```
@@ -108,7 +108,7 @@ When `expected` is a `Hash`, but has optional keys, wrap the `Hash` with
 a built-in `Matcher`
 
 ``` ruby
-exp = {:name=>String, :age=>Fixnum}
+exp = {:name=>String, :age=>Integer}
 expected = DiffMatcher::Matcher.new(exp, :optional_keys=>[:age])
 puts DiffMatcher::difference(expected, {:name=>0})
 # => {
@@ -121,7 +121,7 @@ When multiple `expected` values can be matched against, simply wrap them
 in `Matcher`s and `||` them together
 
 ``` ruby
-exp1 = Fixnum
+exp1 = Integer
 exp2 = Float
 expected = DiffMatcher::Matcher.new(exp1) || DiffMatcher::Matcher.new(exp2)
 puts DiffMatcher::difference(expected, "3")
@@ -132,7 +132,7 @@ puts DiffMatcher::difference(expected, "3")
 Or to do the same thing using a shorter syntax
 
 ``` ruby
-exp1 = Fixnum
+exp1 = Integer
 exp2 = Float
 expected = DiffMatcher::Matcher[exp1, exp2]
 puts DiffMatcher::difference(expected, "3")
@@ -144,13 +144,13 @@ When `actual` is an array of *unknown* size use an `AllMatcher` to match
 against *all* the elements in the array
 
 ``` ruby
-exp = Fixnum
+exp = Integer
 expected = DiffMatcher::AllMatcher.new(exp)
 puts DiffMatcher::difference(expected, [1, 2, "3"])
 # => [
 # =>   : 1,
 # =>   : 2,
-# =>   - Fixnum+ "3"
+# =>   - Integer+ "3"
 # => ]
 # => Where, - 1 missing, + 1 additional, : 2 match_class
 ```
@@ -158,28 +158,28 @@ puts DiffMatcher::difference(expected, [1, 2, "3"])
 
 When `actual` is an array with a *limited* size use an `AllMatcher` to match
 against *all* the elements in the array adhering to the limits of `:min`
-and or `:max` or `:size` (where `:size` is a Fixnum or range of Fixnum).
+and or `:max` or `:size` (where `:size` is a Integer or range of Integer).
 
 ``` ruby
-exp = Fixnum
+exp = Integer
 expected = DiffMatcher::AllMatcher.new(exp, :min=>3)
 puts DiffMatcher::difference(expected, [1, 2])
 # => [
 # =>   : 1,
 # =>   : 2,
-# =>   - Fixnum
+# =>   - Integer
 # => ]
 # => Where, - 1 missing, : 2 match_class
 ```
 
 ``` ruby
-exp = Fixnum
+exp = Integer
 expected = DiffMatcher::AllMatcher.new(exp, :size=>3..5)
 puts DiffMatcher::difference(expected, [1, 2])
 # => [
 # =>   : 1,
 # =>   : 2,
-# =>   - Fixnum
+# =>   - Integer
 # => ]
 # => Where, - 1 missing, : 2 match_class
 ```
@@ -190,9 +190,9 @@ with an `AllMatcher` to match against *all* the elements in the array in
 any of the forms.
 
 ``` ruby
-exp1 = Fixnum
+exp1 = Integer
 exp2 = Float
-expected = DiffMatcher::AllMatcher.new( DiffMatcher::Matcher[Fixnum, Float] )
+expected = DiffMatcher::AllMatcher.new( DiffMatcher::Matcher[Integer, Float] )
 puts DiffMatcher::difference(expected, [1, 2.00, "3"])
 # => [
 # =>   | 1,
@@ -284,7 +284,7 @@ puts expected.diff([1, 2])
 Now consider:
 
 ``` ruby
-puts DiffMatcher::Matcher.new([Fixnum, 2]).diff([1])
+puts DiffMatcher::Matcher.new([Integer, 2]).diff([1])
 # => [
 # =>   : 1,
 # => - 2
@@ -293,7 +293,7 @@ puts DiffMatcher::Matcher.new([Fixnum, 2]).diff([1])
 
 Using `:quiet=>true` will only show missing and additional items in the output
 ``` ruby
-puts DiffMatcher::Matcher.new([Fixnum, 2]).diff([1], :quiet=>true)
+puts DiffMatcher::Matcher.new([Integer, 2]).diff([1], :quiet=>true)
 # => [
 # => - 2
 # => ]
@@ -408,7 +408,7 @@ And use it with:
 ``` ruby
 describe "hash matcher" do
   subject { { :a=>1, :b=>2, :c=>'3', :d=>4, :e=>"additional stuff" } }
-  let(:expected) { { :a=>1, :b=>Fixnum, :c=>/[0-9]/, :d=>lambda { |x| (3..5).include?(x) } } }
+  let(:expected) { { :a=>1, :b=>Integer, :c=>/[0-9]/, :d=>lambda { |x| (3..5).include?(x) } } }
 
   it { should be_matching(expected).with_options(:ignore_additional=>true) }
   it { should be_matching(expected) }

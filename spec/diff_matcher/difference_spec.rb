@@ -126,7 +126,7 @@ describe "DiffMatcher::Matcher[expected].diff(actual, opts)" do
   subject { DiffMatcher::Matcher[expected].diff(actual, opts) }
 
   describe "when expected is an instance," do
-    context "of Fixnum," do
+    context "of Integer," do
       expected, same, different =
         1,
         1,
@@ -140,7 +140,7 @@ describe "DiffMatcher::Matcher[expected].diff(actual, opts)" do
   describe "when expected is an instance," do
     context "of Hash, with optional keys" do
       expected, same, different =
-        {:a=>1, :b=>Fixnum},
+        {:a=>1, :b=>Integer},
         {:a=>1},
         {:a=>2}
 
@@ -156,7 +156,7 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
   subject { DiffMatcher::difference(expected, actual, opts) }
 
   describe "when expected is an instance," do
-    context "of Fixnum," do
+    context "of Integer," do
       expected, same, different =
         1,
         1,
@@ -534,7 +534,7 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
 
       context "or-ed with another DiffMatcher::Matcher," do
         expected, same, different =
-          DiffMatcher::Matcher[Fixnum] | DiffMatcher::Matcher[String],
+          DiffMatcher::Matcher[Integer] | DiffMatcher::Matcher[String],
           "a",
           1.0
 
@@ -635,7 +635,7 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
 
     context "a DiffMatcher::AllMatcher using an or-ed DiffMatcher::Matcher," do
       expected, same, different =
-        DiffMatcher::AllMatcher[ DiffMatcher::Matcher[Fixnum, Float] ],
+        DiffMatcher::AllMatcher[ DiffMatcher::Matcher[Integer, Float] ],
         [1, 2.0, 3],
         [1, "2", 3]
 
@@ -653,8 +653,8 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
         expected, same, different =
           DiffMatcher::AllMatcher[
             DiffMatcher::Matcher[
-              {:nombre=>String, :edad=>Fixnum},
-              {:name=>String, :age=>Fixnum}
+              {:nombre=>String, :edad=>Integer},
+              {:name=>String, :age=>Integer}
             ]
           ],
           [
@@ -674,7 +674,7 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
             | {:name=>"Alice", :age=>10},
             {
               :name=>: "Bob",
-              :age=>- Fixnum+ nil
+              :age=>- Integer+ nil
             },
             | {:nombre=>"Con", :edad=>30}
           ]
@@ -698,7 +698,7 @@ describe "DiffMatcher::difference(expected, actual, opts)" do
       end
     end
     expected, same, different =
-      [ 1,  2, /\d/, Fixnum, 4..6 , lambda { |x| x % 6 == 0 }, matchable.new(7)],
+      [ 1,  2, /\d/, Integer, 4..6 , lambda { |x| x % 6 == 0 }, matchable.new(7)],
       [ 1,  2, "3" , 4     , 5    , 6                        , 7               ],
       [ 0,  2, "3" , 4     , 5    , 6                        , 7               ]
 
