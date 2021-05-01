@@ -1,5 +1,13 @@
 # Changelog
 
+### v2.9.0
+
+* Resolve Fixnum deprecation warnings with Ruby 2.4+
+
+### v2.8.1
+
+* Create shared CLI module
+
 ### v2.8.0
 
 * Add new diff-* executables for matching JSON & CSV files on the command line
